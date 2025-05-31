@@ -122,7 +122,8 @@ async def send_query_to_adk(adk_user_id: str, adk_session_id: str, user_message:
         return "Sorry, I couldn't understand the response from the agent."
     except requests.exceptions.RequestException as e:
         print(f"Error sending query to ADK for user {adk_user_id}, session {adk_session_id}: {e}")
-        return "Sorry, there was an error communicating with the support agent."
+        user_sessions.clear()  # If downstream cloud run timed out (10min) and cleared sessions 
+        return "Sorry, there was an error communicating with the support agent. Please try again."
     except (json.JSONDecodeError, KeyError) as e:
         print(f"Error parsing ADK response: {e}")
         return "Sorry, I received an unexpected response from the support agent."
