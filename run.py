@@ -18,8 +18,7 @@ import google.oauth2.id_token
 # Load environment variables from a .env file for local development
 load_dotenv()
 
-# --- Configuration (from your original script) ---
-TRIGGER = '!help'
+# --- Configuration ---
 ADK_BASE_URL = os.getenv('ADK_BASE_URL')
 ADK_APP_NAME = os.getenv('ADK_APP_NAME')
 DISCORD_BOT_TOKEN = os.getenv('DISCORD_API_KEY')
@@ -129,9 +128,10 @@ async def send_query_to_adk(adk_user_id: str, adk_session_id: str, user_message:
         return "Sorry, I received an unexpected response from the support agent."
 
 
-# --- Discord Bot Setup (Your original logic) ---
+# --- Discord Bot Setup ---
 intents = discord.Intents.default()
 intents.messages = True
+intents.dm_messages = True # Explicitly enable DM messages intent
 intents.message_content = True
 
 client = discord.Client(intents=intents)
@@ -139,24 +139,22 @@ client = discord.Client(intents=intents)
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
-    print('Bot is ready to receive messages.')
+    print('Bot is ready to receive messages in DMs.')
 
-# This function remains unchanged as it calls the updated ADK functions
 @client.event
 async def on_message(message):
+    # Ignore messages from the bot itself
     if message.author == client.user:
         return
 
-    if not client.user.mentioned_in(message) and not message.content.startswith(TRIGGER):
+    # Only respond to messages in DMs (Direct Messages)
+    if not isinstance(message.channel, discord.DMChannel):
         return
 
     content_to_send = message.content
-    if client.user.mentioned_in(message):
-        content_to_send = content_to_send.replace(f'<@!{client.user.id}>', '').replace(f'<@{client.user.id}>', '').strip()
-    elif message.content.startswith(TRIGGER):
-        content_to_send = content_to_send[len(TRIGGER):].strip()
 
     if not content_to_send:
+        # This case is rare in DMs but good to handle
         await message.channel.send("Hello! How can I help you today?")
         return
 
